@@ -1,11 +1,11 @@
-# ATtiny85-Hacks
+Ce dépôt servira de lieu d'hébergement pour tous mes charges utiles ATTiny85 créées.
 
-This repo will serve as a host for all my ATTiny85 payloads made.
-most of them will be copied over from other repo's and changed a little.
+Certain d'entre elles seront copiées depuis d'autres dépôts et légèrement modifiées.
 
-all changes I implement are improvements in my eyes.
+Toutes les modifications que j'implémente sont des améliorations à mes yeux ou pour les mettres à jours suivant les systeme que je rencontre.
 
-I'm using a Discord Webhook to have an easy way of exfiltrating passwords without having to change the webhook.site whenever I lost access to the old one.
-in order to use the script, you need to put your token in the script and change url in the exfil-passwords onenliner
+J'utilise un Webhook Discord pour avoir un moyen facile d'exfiltrer les informations recupéré.
 
-many thanks to everyone from who I copied over the code!
+Pour utiliser le script, vous devez mettre le script .ino sur votre attniy85 (par exemple avec arduino ide) et changer l'URL de la webhook dans les payloads.
+
+Un grand merci à tous ceux dont j'ai copié du code et à mr gpt pour la partie debug.
