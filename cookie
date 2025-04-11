@@ -8,7 +8,7 @@ $defaultBrowserProgId = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\Shel
 
 switch ($defaultBrowserProgId) {
     "ChromeHTML" {
-        $cookiePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Network"
+        $cookiePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Network\Cookies"
         $browser = "Chrome"
     }
     "MSEdgeHTM" {
